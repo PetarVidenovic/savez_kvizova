@@ -1,0 +1,79 @@
+#:import dp kivy.metrics.dp
+
+<QuestionScreen>:
+    canvas.before:
+        Color:
+            rgba: 0, 0, 0.5, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 10
+        spacing: 10
+        Label:
+            text: root.question_text
+            font_size: 13
+            size_hint_y: 0.6
+        GridLayout:
+            cols: 1
+            spacing: 10
+            size_hint_y: 1
+            Button:
+                id: btn_a
+                text: root.options[0]
+                size_hint_y: None
+                height: dp(56)
+                on_release: root.handle_answer(0)
+            Button:
+                id: btn_b
+                text: root.options[1]
+                size_hint_y: None
+                height: dp(56)
+                on_release: root.handle_answer(1)
+            Button:
+                id: btn_c
+                text: root.options[2]
+                size_hint_y: None
+                height: dp(56)
+                on_release: root.handle_answer(2)
+            Button:
+                id: btn_d
+                text: root.options[3]
+                size_hint_y: None
+                height: dp(56)
+                on_release: root.handle_answer(3)
+        Label:
+            text: "Vreme: {:.2f}".format(root.time_left)
+            font_size: 18
+            size_hint_y: 0.1
+        Label:
+            text: "Poeni: {}".format(root.score)
+            font_size: 18
+            size_hint_y: 0.1
+
+<ResultScreen>:
+    canvas.before:
+        Color:
+            rgba: 0, 0, 0.5, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 20
+        spacing: 20
+        Label:
+            text: "Kraj kviza!"
+            font_size: 30
+        Label:
+            text: "Ukupan broj poena: {}".format(root.score)
+            font_size: 24
+        Button:
+            text: "Igraj ponovo"
+            font_size: 20
+            on_release:
+                app.root.get_screen("quiz").score = 0
+                app.root.get_screen("quiz").current_question = 0
+                app.root.current = "quiz"
+
