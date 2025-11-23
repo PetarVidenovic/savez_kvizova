@@ -30,6 +30,11 @@ jobs:
           unzip commandlinetools-linux-9477386_latest.zip -d cmdline-tools
           echo "$HOME/android-sdk/cmdline-tools/tools/bin" >> $GITHUB_PATH
 
+      - name: Check sdkmanager path
+        run: |
+            which sdkmanager || echo "sdkmanager not found"
+            ls -R $HOME/android-sdk/cmdline-tools/tools/bin
+
       - name: Accept Android SDK licenses
         run: yes | sdkmanager --licenses
 
@@ -41,6 +46,7 @@ jobs:
         with:
           name: quiz-apk
           path: bin/*.apk
+
 
 
 
