@@ -29,7 +29,6 @@ jobs:
           cd "$HOME/android-sdk"
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline.zip
           unzip -q cmdline.zip -d cmdline-tools
-          # possible locations to check (covers common ZIP structures)
           CANDIDATES=(
             "$HOME/android-sdk/cmdline-tools/bin"
             "$HOME/android-sdk/cmdline-tools/cmdline-tools/bin"
@@ -48,8 +47,25 @@ jobs:
             ls -laR "$HOME/android-sdk/cmdline-tools" || true
             exit 1
           fi
-          echo "Found sdkmanager in: $FOUND"
           echo "$FOUND" >> $GITHUB_PATH
+          echo "Found sdkmanager in: $FOUND"
+
+      - name: Install required Android SDK packages
+        run: |
+          set -e
+          export ANDROID_SDK_ROOT="$HOME/android-sdk"
+          sdkmanager --sdk_root="$ANDROID_SDK_ROOT" "platform-tools" "platforms;android-33" "build-tools;36.1.0" "cmdline-tools;latest" || true
+          yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses || true
+          ls -la "$ANDROID_SDK_ROOT"
+          ls -la "$ANDROID_SDK_ROOT/build-tools" || true
+
+      - name: Export Android env vars for subsequent steps
+        run: |
+          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "PATH=$HOME/android-sdk/platform-tools:$PATH" >> $GITHUB_ENV
+          mkdir -p $HOME/.buildozer/android/platform
+          ln -sfn $HOME/android-sdk $HOME/.buildozer/android/platform/android-sdk
 
       - name: Debug show sdkmanager and PATH
         run: |
@@ -60,10 +76,7 @@ jobs:
           echo "GITHUB_PATH contents:"
           cat $GITHUB_PATH || true
           echo "Listing the cmdline-tools tree:"
-          ls -laR $HOME/android-sdk/cmdline-tools || true
-
-      - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses
+          ls -laR $HOME/android-sdk || true
 
       - name: Build APK
         run: buildozer android debug
@@ -73,4 +86,5 @@ jobs:
         with:
           name: quiz-apk
           path: bin/*.apk
+
 
