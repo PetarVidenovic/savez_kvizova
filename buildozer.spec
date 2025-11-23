@@ -25,8 +25,9 @@ android.meta_data =
 android.build_tools_version = 33.0.2
 android.resource_files = tech-quiz-news-loop-274362.mp3
 android.logcat_filters = *
+android.accept_sdk_license = true
 
-# p4a.branch = develop
+ p4a.branch = develop
 
 
 
