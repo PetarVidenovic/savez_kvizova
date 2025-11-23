@@ -22,34 +22,45 @@ jobs:
           sudo apt install -y git zip unzip openjdk-17-jdk wget
           pip install buildozer cython
 
-      - name: Install Android SDK commandline-tools
+      - name: Install Android SDK commandline-tools and locate sdkmanager
         run: |
-          mkdir -p $HOME/android-sdk
-          cd $HOME/android-sdk
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
-          unzip -q commandlinetools.zip -d cmdline-tools
-          # Detektuj gde je sdkmanager i dodaj u PATH za sve naredne korake
-          if [ -f "$HOME/android-sdk/cmdline-tools/bin/sdkmanager" ]; then
-            echo "$HOME/android-sdk/cmdline-tools/bin" >> $GITHUB_PATH
-            echo "Added $HOME/android-sdk/cmdline-tools/bin to PATH"
-          elif [ -f "$HOME/android-sdk/cmdline-tools/cmdline-tools/bin/sdkmanager" ]; then
-            echo "$HOME/android-sdk/cmdline-tools/cmdline-tools/bin" >> $GITHUB_PATH
-            echo "Added $HOME/android-sdk/cmdline-tools/cmdline-tools/bin to PATH"
-          else
+          set -e
+          mkdir -p "$HOME/android-sdk"
+          cd "$HOME/android-sdk"
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline.zip
+          unzip -q cmdline.zip -d cmdline-tools
+          # possible locations to check (covers common ZIP structures)
+          CANDIDATES=(
+            "$HOME/android-sdk/cmdline-tools/bin"
+            "$HOME/android-sdk/cmdline-tools/cmdline-tools/bin"
+            "$HOME/android-sdk/cmdline-tools/tools/bin"
+          )
+          FOUND=""
+          for p in "${CANDIDATES[@]}"; do
+            if [ -x "$p/sdkmanager" ] || [ -f "$p/sdkmanager" ]; then
+              FOUND="$p"
+              break
+            fi
+          done
+          if [ -z "$FOUND" ]; then
             echo "ERROR: sdkmanager not found after unzip. Listing cmdline-tools contents:" >&2
-            ls -la $HOME/android-sdk/cmdline-tools || true
-            ls -la $HOME/android-sdk/cmdline-tools/* || true
+            ls -la "$HOME/android-sdk/cmdline-tools" || true
+            ls -laR "$HOME/android-sdk/cmdline-tools" || true
             exit 1
           fi
+          echo "Found sdkmanager in: $FOUND"
+          echo "$FOUND" >> $GITHUB_PATH
 
       - name: Debug: show sdkmanager and PATH
         run: |
-          echo "Which sdkmanager:"
+          echo "which sdkmanager:"
           which sdkmanager || echo "sdkmanager not in PATH yet"
+          echo "sdkmanager version (if available):"
+          sdkmanager --version || true
           echo "GITHUB_PATH contents:"
           cat $GITHUB_PATH || true
-          echo "Listing the bin folder(s):"
-          ls -la $HOME/android-sdk/cmdline-tools* || true
+          echo "Listing the cmdline-tools tree:"
+          ls -laR $HOME/android-sdk/cmdline-tools || true
 
       - name: Accept Android SDK licenses
         run: yes | sdkmanager --licenses
@@ -62,14 +73,3 @@ jobs:
         with:
           name: quiz-apk
           path: bin/*.apk
-
-
-
-
-
-
-
-
-
-
-
