@@ -31,7 +31,7 @@ jobs:
           echo "$HOME/android-sdk/cmdline-tools/tools/bin" >> $GITHUB_PATH
 
       - name: Accept Android SDK licenses
-          run: yes | sdkmanager --licenses
+        run: yes | sdkmanager --licenses
 
       - name: Build APK
         run: buildozer android debug
