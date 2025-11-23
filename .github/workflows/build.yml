@@ -51,7 +51,7 @@ jobs:
           echo "Found sdkmanager in: $FOUND"
           echo "$FOUND" >> $GITHUB_PATH
 
-      - name: Debug: show sdkmanager and PATH
+      - name: Debug show sdkmanager and PATH
         run: |
           echo "which sdkmanager:"
           which sdkmanager || echo "sdkmanager not in PATH yet"
@@ -73,3 +73,4 @@ jobs:
         with:
           name: quiz-apk
           path: bin/*.apk
+
