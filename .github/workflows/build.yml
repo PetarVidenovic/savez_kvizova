@@ -50,22 +50,46 @@ jobs:
           echo "$FOUND" >> $GITHUB_PATH
           echo "Found sdkmanager in: $FOUND"
 
+      - name: Make SDK layout compatible for buildozer
+        run: |
+          set -e
+          SDK_ROOT="$HOME/android-sdk"
+          # Ensure buildozer sees the SDK in its expected location
+          mkdir -p $HOME/.buildozer/android/platform
+          ln -sfn "$SDK_ROOT" "$HOME/.buildozer/android/platform/android-sdk"
+          # Find actual sdkmanager
+          if [ -x "$SDK_ROOT/cmdline-tools/bin/sdkmanager" ]; then
+            SDKMANAGER="$SDK_ROOT/cmdline-tools/bin/sdkmanager"
+          elif [ -x "$SDK_ROOT/cmdline-tools/cmdline-tools/bin/sdkmanager" ]; then
+            SDKMANAGER="$SDK_ROOT/cmdline-tools/cmdline-tools/bin/sdkmanager"
+          elif [ -x "$SDK_ROOT/cmdline-tools/tools/bin/sdkmanager" ]; then
+            SDKMANAGER="$SDK_ROOT/cmdline-tools/tools/bin/sdkmanager"
+          else
+            echo "ERROR: sdkmanager not found in SDK_ROOT ($SDK_ROOT)" >&2
+            ls -la "$SDK_ROOT" || true
+            exit 1
+          fi
+          # Create legacy tools/bin and symlink sdkmanager there for compatibility
+          mkdir -p "$SDK_ROOT/tools/bin"
+          ln -sfn "$SDKMANAGER" "$SDK_ROOT/tools/bin/sdkmanager"
+          chmod +x "$SDK_ROOT/tools/bin/sdkmanager"
+          # Export env vars for subsequent steps
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$SDK_ROOT" >> $GITHUB_ENV
+          echo "PATH=$SDK_ROOT/platform-tools:$SDK_ROOT/tools/bin:$PATH" >> $GITHUB_ENV
+          echo "Linked sdkmanager to: $SDK_ROOT/tools/bin/sdkmanager"
+          "$SDK_ROOT/tools/bin/sdkmanager" --version || true
+          ls -la "$SDK_ROOT/tools" || true
+
       - name: Install required Android SDK packages
         run: |
           set -e
           export ANDROID_SDK_ROOT="$HOME/android-sdk"
-          sdkmanager --sdk_root="$ANDROID_SDK_ROOT" "platform-tools" "platforms;android-33" "build-tools;36.1.0" "cmdline-tools;latest" || true
-          yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses || true
+          # Adjust platform and build-tools versions to match your buildozer.spec if needed
+          yes | "$ANDROID_SDK_ROOT/tools/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" "platform-tools" "platforms;android-33" "build-tools;36.1.0" "cmdline-tools;latest" || true
+          yes | "$ANDROID_SDK_ROOT/tools/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" --licenses || true
           ls -la "$ANDROID_SDK_ROOT"
           ls -la "$ANDROID_SDK_ROOT/build-tools" || true
-
-      - name: Export Android env vars for subsequent steps
-        run: |
-          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "PATH=$HOME/android-sdk/platform-tools:$PATH" >> $GITHUB_ENV
-          mkdir -p $HOME/.buildozer/android/platform
-          ln -sfn $HOME/android-sdk $HOME/.buildozer/android/platform/android-sdk
 
       - name: Debug show sdkmanager and PATH
         run: |
@@ -75,7 +99,7 @@ jobs:
           sdkmanager --version || true
           echo "GITHUB_PATH contents:"
           cat $GITHUB_PATH || true
-          echo "Listing the cmdline-tools tree:"
+          echo "Listing the android-sdk tree:"
           ls -laR $HOME/android-sdk || true
 
       - name: Build APK
@@ -86,5 +110,6 @@ jobs:
         with:
           name: quiz-apk
           path: bin/*.apk
+
 
 
