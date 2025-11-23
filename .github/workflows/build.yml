@@ -22,6 +22,22 @@ jobs:
           sudo apt install -y git zip unzip openjdk-17-jdk wget
           pip install buildozer cython
 
+       - name: Install build tools for autoreconf
+         run: |
+           sudo apt update
+           sudo apt install -y \
+             build-essential \
+             autoconf \
+             automake \
+             libtool \
+             libtool-bin \
+             pkg-config \
+             m4 \
+             zlib1g-dev \
+             libssl-dev \
+             libncurses5-dev \
+             libffi-dev
+
       - name: Install Android SDK commandline-tools and locate sdkmanager
         run: |
           set -e
@@ -54,10 +70,8 @@ jobs:
         run: |
           set -e
           SDK_ROOT="$HOME/android-sdk"
-          # Ensure buildozer sees the SDK in its expected location
           mkdir -p $HOME/.buildozer/android/platform
           ln -sfn "$SDK_ROOT" "$HOME/.buildozer/android/platform/android-sdk"
-          # Find actual sdkmanager
           if [ -x "$SDK_ROOT/cmdline-tools/bin/sdkmanager" ]; then
             SDKMANAGER="$SDK_ROOT/cmdline-tools/bin/sdkmanager"
           elif [ -x "$SDK_ROOT/cmdline-tools/cmdline-tools/bin/sdkmanager" ]; then
@@ -69,11 +83,9 @@ jobs:
             ls -la "$SDK_ROOT" || true
             exit 1
           fi
-          # Create legacy tools/bin and symlink sdkmanager there for compatibility
           mkdir -p "$SDK_ROOT/tools/bin"
           ln -sfn "$SDKMANAGER" "$SDK_ROOT/tools/bin/sdkmanager"
           chmod +x "$SDK_ROOT/tools/bin/sdkmanager"
-          # Export env vars for subsequent steps
           echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> $GITHUB_ENV
           echo "ANDROID_HOME=$SDK_ROOT" >> $GITHUB_ENV
           echo "PATH=$SDK_ROOT/platform-tools:$SDK_ROOT/tools/bin:$PATH" >> $GITHUB_ENV
@@ -85,7 +97,6 @@ jobs:
         run: |
           set -e
           export ANDROID_SDK_ROOT="$HOME/android-sdk"
-          # Adjust platform and build-tools versions to match your buildozer.spec if needed
           yes | "$ANDROID_SDK_ROOT/tools/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" "platform-tools" "platforms;android-33" "build-tools;36.1.0" "cmdline-tools;latest" || true
           yes | "$ANDROID_SDK_ROOT/tools/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" --licenses || true
           ls -la "$ANDROID_SDK_ROOT"
@@ -110,6 +121,7 @@ jobs:
         with:
           name: quiz-apk
           path: bin/*.apk
+
 
 
 
