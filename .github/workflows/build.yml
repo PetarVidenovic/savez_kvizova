@@ -22,21 +22,21 @@ jobs:
           sudo apt install -y git zip unzip openjdk-17-jdk wget
           pip install buildozer cython
 
-       - name: Install build tools for autoreconf
-         run: |
-           sudo apt update
-           sudo apt install -y \
-             build-essential \
-             autoconf \
-             automake \
-             libtool \
-             libtool-bin \
-             pkg-config \
-             m4 \
-             zlib1g-dev \
-             libssl-dev \
-             libncurses5-dev \
-             libffi-dev
+      - name: Install build tools for autoreconf
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            build-essential \
+            autoconf \
+            automake \
+            libtool \
+            libtool-bin \
+            pkg-config \
+            m4 \
+            zlib1g-dev \
+            libssl-dev \
+            libncurses5-dev \
+            libffi-dev
 
       - name: Install Android SDK commandline-tools and locate sdkmanager
         run: |
@@ -121,6 +121,7 @@ jobs:
         with:
           name: quiz-apk
           path: bin/*.apk
+
 
 
 
